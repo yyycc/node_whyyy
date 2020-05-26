@@ -1,11 +1,10 @@
 var express = require('express');
 var router = express.Router();
-var blogHandle = require('../modules/handle');
-var json = require('./json');
+var blogHandle = require('../modules/Blog/handle');
+var posts = require('../modules/Blog/posts');
 
 // 删除all
 router.get('/del', function (req, res, next) {
-
     blogHandle.deleteAll(req, res, next);
 });
 
@@ -16,9 +15,9 @@ router.get('/test', function (req, res, next) {
 // 插入all
 router.get('/', function (req, res, next) {
     var blogs = [];
-    for (let i = 0; i < json['posts'].length; i++) {
+    for (let i = 0; i < posts.length; i++) {
         var blog = [];
-        var post = json['posts'][i];
+        var post = posts[i];
         blog.push(post['key']);
         blog.push(post['title']);
         blog.push(post['date']);

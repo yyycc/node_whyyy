@@ -6,7 +6,7 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var initBlogRouter = require('./routes/initBlog');
+var blogRouter = require('./routes/blogs');
 
 var app = express();
 
@@ -33,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);  // 在app中注册该接口
 app.use('/users', usersRouter);   // 在app中注册users接口
-app.use('/blog', initBlogRouter);   // 在app中注册users接口
+app.use('/blog', blogRouter);   // 在app中注册users接口
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -1,8 +1,9 @@
 var URL = require('url'); //获取url参数 依赖于url模块 使用前需要使用require
-var User = require('./user');
+var User = require('../modules/User/user');
 var mysql = require('mysql');
 var express = require('express');
 var router = express.Router();
+var userHandle = require('../modules/User/handle');
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -45,5 +46,32 @@ router.get('/getUserInfo', function (req, res, next) {
     connection.end();
 
 });
+
+// 根据ID查询用户
+router.get('/queryById', function (req, res, next) {
+    var params = URL.parse(req.url, true).query;
+    if (!params.id) {
+        res.send('请在url中拼接查询id');
+        return false;
+    }
+    userHandle.queryById(req, res, next);
+});
+
+// 根据用户名查询用户
+router.get('/queryByName', function (req, res, next) {
+    var params = URL.parse(req.url, true).query;
+    if (!params.name) {
+        res.send('请在url中拼接查询name');
+        return false;
+    }
+    userHandle.queryByName(req, res, next);
+});
+
+// 查询所有用户
+router.get('/queryAll', function (req, res, next) {
+    userHandle.queryAll(req, res, next);
+});
+
+/* GET users listing. */
 
 module.exports = router;

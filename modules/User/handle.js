@@ -9,13 +9,13 @@
 // 引入mysql
 let mysql = require('mysql');
 // 引入mysql连接配置
-let mysqlConfig = require('../config/mysql');
+let mysqlConfig = require('../../config/mysql');
 // 引入连接池配置
-let poolExtend = require('./poolextent');
+let poolExtend = require('../poolextent');
 // 引入SQL模块
 let sql = require('./sql');
 // 引入json模块
-let json = require('./json');
+let json = require('../json');
 // 使用连接池，提升性能
 let pool = mysql.createPool(poolExtend({}, mysqlConfig));
 
@@ -28,21 +28,6 @@ let userData = {
                 }
                 // 以json形式，把操作结果返回给前台页面
                 console.log(sql.insert);
-                json(res, result);
-                // 释放连接
-                connection.release();
-            });
-        });
-    },
-    batchInsertTest: function (req, res, next) {
-        pool.getConnection(function (err, connection) {
-            var param = [['xiaohong', 'F'], ['xiaolan', 'M']];
-            connection.query(sql.insertUser, [param], function (err, result) {
-                if (result) {
-                    result = 'add'
-                }
-                // 以json形式，把操作结果返回给前台页面
-                console.log('err:' + err);
                 json(res, result);
                 // 释放连接
                 connection.release();
@@ -112,11 +97,11 @@ let userData = {
         let id = +req.query.id;
         pool.getConnection(function (err, connection) {
             connection.query(sql.queryById, id, function (err, result) {
-                if (result != '') {
+                if (!!result && result !== '') {
                     let _result = result;
                     result = {
                         result: 'select',
-                        data: _result
+                        data: _result[0] //id查询必然匹配到<=1条数据
                     }
                 } else {
                     result = undefined;
@@ -126,13 +111,32 @@ let userData = {
             });
         });
     },
-    queryAllBlogs: function (req, res, next) {
+    queryByName: function (req, res, next) {
+        let name = '' + req.query.name;
         pool.getConnection(function (err, connection) {
-            connection.query(sql.queryAllBlogs, function (err, result) {
-                if (result != '') {
+            connection.query(sql.queryByName, name, function (err, result) {
+                if (!!result && result !== '') {
                     let _result = result;
                     result = {
-                        result: 'selectall',
+                        result: 'select',
+                        data: _result[0] //id查询必然匹配到<=1条数据
+                    }
+                } else {
+                    result = undefined;
+                    err = err;
+                }
+                json(res, result, err);
+                connection.release();
+            });
+        });
+    },
+    queryAll: function (req, res, next) {
+        pool.getConnection(function (err, connection) {
+            connection.query(sql.queryAll, function (err, result) {
+                if (!!result && result !== '') {
+                    let _result = result;
+                    result = {
+                        result: 'selectAll',
                         data: _result
                     }
                 } else {
