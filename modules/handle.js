@@ -9,17 +9,33 @@
 // 引入mysql
 let mysql = require('mysql');
 // 引入mysql连接配置
-let mysqlConfig = require('../../config/mysql');
+let mysqlConfig = require('../config/mysql');
 // 引入连接池配置
-let poolExtend = require('../poolextent');
+let poolExtend = require('./poolextent');
 // 引入SQL模块
-let sql = require('./sql');
+let sql = require('./User/sql');
 // 引入json模块
-let json = require('../json');
+let json = require('./json');
 // 使用连接池，提升性能
 let pool = mysql.createPool(poolExtend({}, mysqlConfig));
 
 let userData = {
+    // 新增
+    insert: function (req, res, next) {
+        pool.getConnection(function (err, connection) {
+            connection.query(sql.insert, [...req.body], function (err, result) {
+                if (result) {
+                    result = 'add'
+                }
+                // 以json形式，把操作结果返回给前台页面
+                console.log(sql.insert);
+                json(res, result);
+                // 释放连接
+                connection.release();
+            });
+        });
+    },
+    // 新增多条
     batchInsert: function (req, res, next) {
         pool.getConnection(function (err, connection) {
             connection.query(sql.batchInsert, [req.body], function (err, result) {
@@ -33,6 +49,7 @@ let userData = {
             });
         });
     },
+    // 批量更新(增、删、改)
     batchUpdate: function (req, res, next) {
         pool.getConnection(function (err, connection) {
             let result = 'batchUpdate';
@@ -68,41 +85,58 @@ let userData = {
             connection.release();
         })
     },
-    deleteAll: function (req, res, next) {
+
+    // 根据多个ID删除
+    deleteByIds: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
-            connection.query(sql.deleteAll, null, function (err, result) {
-                if (result && result.affectedRows > 0) {
+            console.log(req.query.ids);
+            connection.query(sql, [req.query.ids.split(',')], function (err, result) {
+                console.log(err);
+                console.log(result);
+                let affected;
+                if (!err && result.affectedRows === 0) {
                     result = 'delete';
+                    affected = '根据ID未查询到数据';
+                }else if(result.affectedRows !== req.query.ids.split(',').length){
+                    affected = '删除' + result.affectedRows + '条数据';
+                    result = 'delete';
+                }else if (result.affectedRows > 0) {
+                    result = 'delete';
+                    affected = '删除成功';
                 } else {
                     result = undefined;
                 }
-                json(res, result);
+                json(res, result, affected);
                 connection.release();
             });
         });
     },
-    delete: function (req, res, next) {
+
+    // 根据ID删除
+    deleteById: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
-            let id = +req.query.id;
-            connection.query(sql.delete, id, function (err, result) {
-                if (result.affectedRows > 0) {
+            connection.query(sql, req.query.id, function (err, result) {
+                let affected;
+                if (!err && result.affectedRows === 0) {
                     result = 'delete';
+                    affected = '根据ID未查询到数据';
+                } else if (result.affectedRows > 0) {
+                    result = 'delete';
+                    affected = '删除成功';
                 } else {
                     result = undefined;
                 }
-                json(res, result);
+                json(res, result, affected);
                 connection.release();
             });
         });
     },
+    // 根据ID更新
     update: function (req, res, next) {
-        let param = req.body;
-        if (param.name == null || param.age == null || param.id == null) {
-            json(res, undefined);
-            return;
-        }
+        let id = req.body[i].id;
+        delete req.body[i].id;
         pool.getConnection(function (err, connection) {
-            connection.query(sql.update, [param.name, param.age, +param.id], function (err, result) {
+            connection.query(sql.update, [...Object.values(req.body), +id], function (err, result) {
                 if (result.affectedRows > 0) {
                     result = 'update'
                 } else {
@@ -113,56 +147,55 @@ let userData = {
             });
         });
     },
-    queryById: function (req, res, next) {
+    // 根据ID查询
+    queryById: function (req, res, next, sql) {
         let id = +req.query.id;
         pool.getConnection(function (err, connection) {
-            connection.query(sql.queryById, id, function (err, result) {
+            connection.query(sql, id, function (err, result) {
                 if (!!result && result !== '') {
-                    let _result = result;
                     result = {
-                        result: 'select',
-                        data: _result[0] //id查询必然匹配到<=1条数据
+                        result: 'queryById',
+                        data: result //id查询必然匹配到<=1条数据
                     }
                 } else {
                     result = undefined;
-                }
-                json(res, result);
-                connection.release();
-            });
-        });
-    },
-    queryByName: function (req, res, next) {
-        let name = '' + req.query.name;
-        pool.getConnection(function (err, connection) {
-            connection.query(sql.queryByName, name, function (err, result) {
-                if (!!result && result !== '') {
-                    let _result = result;
-                    result = {
-                        result: 'select',
-                        data: _result[0] //id查询必然匹配到<=1条数据
-                    }
-                } else {
-                    result = undefined;
-                    err = err;
                 }
                 json(res, result, err);
                 connection.release();
             });
         });
     },
-    queryAll: function (req, res, next) {
+    //根据条件查询
+    query: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
-            connection.query(sql.queryAll, function (err, result) {
+            connection.query(sql, [...Object.values(req.query)], function (err, result) {
                 if (!!result && result !== '') {
-                    let _result = result;
                     result = {
-                        result: 'selectAll',
-                        data: _result
+                        result: 'query',
+                        data: result
                     }
                 } else {
                     result = undefined;
                 }
-                json(res, result);
+                json(res, result, err);
+                connection.release();
+            });
+        });
+    },
+    // 查询全部
+    queryAll: function (req, res, next, sql) {
+        pool.getConnection(function (err, connection) {
+            connection.query(sql, function (err, result) {
+                console.log(err);
+                if (!!result && result !== '') {
+                    result = {
+                        result: 'queryAll',
+                        data: result
+                    }
+                } else {
+                    result = undefined;
+                }
+                json(res, result, err);
                 connection.release();
             });
         });
