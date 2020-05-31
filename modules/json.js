@@ -6,7 +6,7 @@ var json = function (res, result, msg) {
             code: '1',
             msg: msg
         });
-    } else if (result === 'add') {
+    } else if (result === 'insert') {
         res.json({
             code: '200',
             msg: '添加成功'

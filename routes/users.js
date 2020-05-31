@@ -1,10 +1,11 @@
 let express = require('express');
 let router = express.Router();
 let userHandle = require('../modules/handle');
+let User = require('../modules/User/user');
 
 let sql = require('../modules/sql');
 let sqlValue = {};
-sql('y_users', null, sqlValue);
+sql('y_users', {id: 'id'}, sqlValue);
 /* GET users listing. */
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
@@ -66,9 +67,60 @@ router.get('/deleteByIds', function (req, res, next) {
 
 
 /* POST users listing. */
-// 新增用户
+/**
+ *  /users/insertSelective
+ *  新增用户
+ *  根据传入的对象插值，如果是null，就使用数据库字段默认值
+ */
+router.post('/insertSelective', function (req, res, next) {
+    sql('y_users', {data: req.body}, sqlValue);
+    userHandle.insert(req, res, next, sqlValue.insert);
+});
+
+/**
+ *  /users/insert
+ *  新增用户
+ *  根据传入的对象插值，如果是null，就插入null，不会使用数据库字段默认值
+ */
 router.post('/insert', function (req, res, next) {
-    userHandle.batchInsert(req, res, next);
+    // 新建表对象
+    let user = new User(req.body);
+    req.body = user;
+    sql('y_users', {data: user}, sqlValue);
+    userHandle.insert(req, res, next, sqlValue.insert);
+});
+
+/**
+ *  /users/batchInsert
+ *  批量新增用户
+ *  根据传入的对象插值，如果是null，就插入null，不会使用数据库字段默认值
+ */
+router.post('/batchInsertSelective', function (req, res, next) {
+    sql('y_users', {data: req.body}, sqlValue);
+    let data = [];
+    for (let i = 0; i < req.body.length; i++) {
+        data.push(Object.values(req.body[i]));
+    }
+    req.body = data;
+    userHandle.batchInsert(req, res, next, sqlValue.batchInsert);
+});
+
+/**
+ *  /users/batchInsertSelective
+ *  批量新增用户
+ *  根据传入的对象插值，如果是null，就使用数据库字段默认值
+ */
+router.post('/batchInsert', function (req, res, next) {
+    // 新建表对象
+    let user;
+    let data = [];
+    for (let i = 0; i < req.body.length; i++) {
+        user = new User(req.body[i]);
+        data.push(Object.values(user));
+    }
+    req.body = data;
+    sql('y_users', {data: new User(req.body[0])}, sqlValue);
+    userHandle.batchInsert(req, res, next, sqlValue.batchInsert);
 });
 
 router.post('/batchUpdate', function (req, res, next) {

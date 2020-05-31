@@ -13,16 +13,31 @@
     update: 'update y_users set `name`=?, gender=?, password=?, role=?, mail_address=?, phone_number=?, age=?, creation_date=? WHERE id=?',
 };*/
 
-var user = function(tableName, tableObject, sql) {
+// insertSelective()
+let user = function (tableName, tableObject, sql) {
     sql.queryAll = 'SELECT * FROM ' + tableName;
-    sql.queryById = 'SELECT * FROM ' + tableName + ' WHERE id=?';
+    sql.queryById = 'SELECT * FROM ' + tableName + ' WHERE ' + tableObject.id + '=?';
     sql.query = 'SELECT * FROM ' + tableName;
 
     sql.deleteAll = 'DELETE FROM ' + tableName;
-    sql.deleteById = 'DELETE FROM ' + tableName + ' WHERE id=?';
-    sql.deleteByIds = 'DELETE FROM ' + tableName + ' WHERE id in (?)';
-};
+    sql.deleteById = 'DELETE FROM ' + tableName + ' WHERE ' + tableObject.id + '=?';
+    sql.deleteByIds = 'DELETE FROM ' + tableName + ' WHERE ' + tableObject.id + ' in (?)';
 
+    // 根据传入对象的字段数目动态拼接sql
+    let tableColumns, values = [];
+    if (!!tableObject.data && !(tableObject.data instanceof Array)) {
+        // data是对象的时候
+        tableColumns = Object.keys(tableObject.data);
+        for (let i = 0; i < tableColumns.length; i++) {
+            values.push('?');
+        }
+    } else if (!!(tableObject.data instanceof Array) && tableObject.data.length > 0) {
+        // data是数组的时候
+        tableColumns = Object.keys(tableObject.data[0]);
+    }
+    sql.insert = 'INSERT INTO y_users(' + tableColumns + ') VALUES(' + values.join(',') + ')';
+    sql.batchInsert = 'INSERT INTO y_users(' + tableColumns + ') VALUES ?';
+};
 
 
 module.exports = user;

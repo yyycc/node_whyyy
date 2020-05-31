@@ -2,8 +2,10 @@ let express = require('express');
 let router = express.Router();
 let blogHandle = require('../modules/handle');
 let posts = require('../modules/Blog/posts');
-let sql = require('../modules/Blog/sql');
 
+let sql = require('../modules/sql');
+let sqlValue = {};
+sql('y_blogs', {id: 'blog_id'}, sqlValue);
 // 删除all
 router.get('/del', function (req, res, next) {
     blogHandle.deleteAll(req, res, next);
@@ -40,22 +42,20 @@ router.get('/queryById', function (req, res, next) {
         res.send('请在url中拼接查询id');
         return false;
     }
-    blogHandle.queryById(req, res, next, sql.queryById);
+    blogHandle.queryById(req, res, next, sqlValue.queryById);
 });
 
 // 查询 all
 router.get('/queryAll', function (req, res, next) {
-    blogHandle.queryAll(req, res, next, sql.queryAll);
+    blogHandle.queryAll(req, res, next, sqlValue.queryAll);
 });
 
 // 根据条件查询blog
 router.get('/query', function (req, res, next) {
-    console.log(req.url);
     let obj = new URL(req.url, 'http://localhost:8880/');
     let params = obj.searchParams;
     let keys = [];
-    let query = sql.query;
-    console.log(obj.searchParams);
+    let query = sqlValue.query;
     params.forEach((value, name) => {
         keys.push(name);
         if (query.indexOf('where') > -1) {
@@ -68,6 +68,26 @@ router.get('/query', function (req, res, next) {
     });
     console.log(query);
     blogHandle.query(req, res, next, query);
+});
+
+// 根据ID删除blog
+router.get('/deleteById', function (req, res, next) {
+    let obj = new URL(req.url, 'http://localhost:8880/');
+    if (!obj.searchParams.get('id')) {
+        res.send('请在url中拼接id');
+        return false;
+    }
+    blogHandle.deleteById(req, res, next, sqlValue.deleteById);
+});
+
+// 根据IDs删除blog
+router.get('/deleteByIds', function (req, res, next) {
+    let obj = new URL(req.url, 'http://localhost:8880/');
+    if (!obj.searchParams.get('ids')) {
+        res.send('请在url中拼接ids');
+        return false;
+    }
+    blogHandle.deleteByIds(req, res, next, sqlValue.deleteByIds);
 });
 
 module.exports = router;

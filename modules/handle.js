@@ -21,29 +21,28 @@ let pool = mysql.createPool(poolExtend({}, mysqlConfig));
 
 let userData = {
     // 新增
-    insert: function (req, res, next) {
+    insert: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
-            connection.query(sql.insert, [...req.body], function (err, result) {
+            connection.query(sql, [...Object.values(req.body)], function (err, result) {
                 if (result) {
-                    result = 'add'
+                    result = 'insert'
                 }
-                // 以json形式，把操作结果返回给前台页面
-                console.log(sql.insert);
-                json(res, result);
+                json(res, result, err);
                 // 释放连接
                 connection.release();
             });
         });
     },
     // 新增多条
-    batchInsert: function (req, res, next) {
+    batchInsert: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
-            connection.query(sql.batchInsert, [req.body], function (err, result) {
+            console.log(req.body);
+            connection.query(sql, [req.body], function (err, result) {
                 if (result) {
-                    result = 'add'
+                    result = 'insert'
                 }
                 // 以json形式，把操作结果返回给前台页面
-                json(res, result);
+                json(res, result, err);
                 // 释放连接
                 connection.release();
             });
@@ -91,16 +90,14 @@ let userData = {
         pool.getConnection(function (err, connection) {
             console.log(req.query.ids);
             connection.query(sql, [req.query.ids.split(',')], function (err, result) {
-                console.log(err);
-                console.log(result);
                 let affected;
                 if (!err && result.affectedRows === 0) {
                     result = 'delete';
                     affected = '根据ID未查询到数据';
-                }else if(result.affectedRows !== req.query.ids.split(',').length){
+                } else if (result.affectedRows !== req.query.ids.split(',').length) {
                     affected = '删除' + result.affectedRows + '条数据';
                     result = 'delete';
-                }else if (result.affectedRows > 0) {
+                } else if (result.affectedRows > 0) {
                     result = 'delete';
                     affected = '删除成功';
                 } else {
