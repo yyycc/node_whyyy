@@ -48,40 +48,44 @@ let userData = {
         });
     },
     // 批量更新(增、删、改)
-    batchUpdate: function (req, res, next, sql) {
+    batchUpdate: function (req, res, next) {
         pool.getConnection(function (err, connection) {
             let result = 'batchUpdate';
+            let msg = '更新成功';
             for (let i = 0; i < req.body.length; i++) {
-                var status = req.body[i]._status;
+                let status = req.body[i]._status;
+                let sql = req.body[i].sql;
                 delete req.body[i]._status;
+                delete req.body[i].sql;
                 if (status === 'ADD') {
-                    connection.query(sql.insert, [...Object.values(req.body[i])], function (err, result) {
-                        if (err) {
-                            result = undefined
-                        }
-                    });
+                    connection.query(sql, [...Object.values(req.body[i])],
+                        function (err, result) {
+                            if (err) {
+                                msg = err;
+                            }
+                        });
                 } else if (status === 'UPDATE') {
                     let id = req.body[i].id;
                     delete req.body[i].id;
-                    console.log(sql.updateById);
-                    connection.query(sql.updateById, [...Object.values(req.body[i]), +id],
+                    connection.query(sql, [...Object.values(req.body[i]), +id],
                         function (err, result) {
-                        console.log(err);
-                        console.log(result);
                             if (err) {
-                                result = undefined
+                                msg = err;
                             }
                         });
                 } else if (status === 'DELETE') {
                     let id = req.body[i].id;
-                    connection.query(sql.deleteById, id, function (err, result) {
+                    if (!id) {
+                        continue;
+                    }
+                    connection.query(sql, id, function (err, result) {
                         if (err) {
-                            result = undefined
+                            msg = err;
                         }
                     });
                 }
             }
-            json(res, result);
+            json(res, result, msg);
             connection.release();
         })
     },

@@ -159,9 +159,24 @@ router.post('/updateById', function (req, res, next) {
  *  批量更新(增、删、改)
  */
 router.post('/batchUpdate', function (req, res, next) {
-    console.log(req.body);
-    sql(tableName, {data: req.body}, sqlValue);
-    userHandle.batchUpdate(req, res, next, sqlValue);
+    for (let i = 0; i < req.body.length; i++) {
+        if (req.body[i]._status === 'ADD') {
+            Object.keys(req.body[i]).forEach(item=>{
+                if(!req.body[i][item])  delete req.body[i][item]
+            });
+            sql(tableName, {id: 'id', data: req.body[i]}, sqlValue);
+            req.body[i].sql = sqlValue.insert;
+        }
+        if (req.body[i]._status === 'UPDATE') {
+            sql(tableName, {id: 'id', data: req.body[i]}, sqlValue);
+            req.body[i].sql = sqlValue.updateById;
+        }
+        if (req.body[i]._status === 'DELETE') {
+            sql(tableName, {id: 'id', data: req.body[i]}, sqlValue);
+            req.body[i].sql = sqlValue.deleteById;
+        }
+    }
+    userHandle.batchUpdate(req, res, next);
 });
 /* POST users listing. */
 

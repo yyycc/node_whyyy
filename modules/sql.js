@@ -14,6 +14,12 @@
 };*/
 
 // insertSelective()
+
+let remove = function (arg, ele) {
+    if (arg.indexOf(ele) > -1) {
+        arg.splice(arg.indexOf(ele), 1);
+    }
+};
 let user = function (tableName, tableObject, sql) {
     sql.queryAll = 'SELECT * FROM ' + tableName;
     sql.queryById = 'SELECT * FROM ' + tableName + ' WHERE ' + tableObject.id + '=?';
@@ -28,23 +34,23 @@ let user = function (tableName, tableObject, sql) {
     if (!!tableObject.data && !(tableObject.data instanceof Array)) {
         // data是对象的时候
         tableColumns = Object.keys(tableObject.data);
+        if (tableColumns && tableColumns.length > 0) {
+            remove(tableColumns, '_status');
+            remove(tableColumns, 'id');
+        }
         for (let i = 0; i < tableColumns.length; i++) {
             values.push('?');
-            if (tableColumns[i] !== '_status' && tableColumns[i] !== 'id') {
-                updateColumns.push(tableColumns[i] + '=?');
-            }
+            updateColumns.push(tableColumns[i] + '=?');
         }
     } else if (!!(tableObject.data instanceof Array) && tableObject.data.length > 0) {
         // data是数组的时候
         tableColumns = Object.keys(tableObject.data[0]);
         for (let i = 0; i < tableColumns.length; i++) {
-            if (tableColumns[i] !== '_status' && tableColumns[i] !== 'id') {
-                updateColumns.push(tableColumns[i] + '=?');
-            }
+            updateColumns.push(tableColumns[i] + '=?');
         }
     }
-    sql.insert = 'INSERT INTO y_users(' + tableColumns + ') VALUES(' + values.join(',') + ')';
-    sql.batchInsert = 'INSERT INTO y_users(' + tableColumns + ') VALUES ?';
+    sql.insert = 'INSERT INTO ' + tableName + ' (' + tableColumns + ') VALUES(' + values.join(',') + ')';
+    sql.batchInsert = 'INSERT INTO ' + tableName + ' (' + tableColumns + ') VALUES ?';
 
 
     sql.updateById = 'UPDATE ' + tableName + ' set ' + updateColumns.join(',') + ' where id=?';

@@ -24,7 +24,7 @@ var json = function (res, result, msg) {
     } else if (result === 'batchUpdate') {
         res.json({
             code: '200',
-            msg: '更新成功'
+            msg: msg || '更新成功'
         });
     } else if (!!result.result && result.result === 'query') {
         if (result.data.length === 0) {

@@ -5,6 +5,7 @@ var mysql = {
     user: 'ever',
     password: '050511',
     database: 'whyyy',
-    port: 3306
+    port: 3306,
+    timezone: "08:00"
 };
 module.exports = mysql;

@@ -28,7 +28,6 @@ let userData = {
                     result = 'add'
                 }
                 // 以json形式，把操作结果返回给前台页面
-                console.log(sql.insert);
                 json(res, result);
                 // 释放连接
                 connection.release();
