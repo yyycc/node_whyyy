@@ -2,16 +2,21 @@ let express = require('express');
 let router = express.Router();
 let userHandle = require('../modules/handle');
 let User = require('../modules/User/user');
-
+let tableName = 'y_users';
 let sql = require('../modules/sql');
 let sqlValue = {};
-sql('y_users', {id: 'id'}, sqlValue);
+sql(tableName, {id: 'id'}, sqlValue);
+
 /* GET users listing. */
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
 });
 
-// 根据ID查询用户
+/**
+ * /users/queryById
+ * 根据ID查询用户
+ * 获取拼接在url上的id
+ */
 router.get('/queryById', function (req, res, next) {
     let obj = new URL(req.url, 'http://localhost:8880/');
     if (!obj.searchParams.get('id')) {
@@ -21,7 +26,11 @@ router.get('/queryById', function (req, res, next) {
     userHandle.queryById(req, res, next, sqlValue.queryById);
 });
 
-// 根据条件查询用户
+/**
+ * /users/query
+ * 根据条件查询用户
+ * 获取拼接在url上查询条件
+ */
 router.get('/query', function (req, res, next) {
     let obj = new URL(req.url, 'http://localhost:8880/');
     let params = obj.searchParams;
@@ -37,13 +46,20 @@ router.get('/query', function (req, res, next) {
     });
     userHandle.query(req, res, next, query);
 });
-
 // 查询所有用户
+/**
+ * /users/queryAll
+ * 查询所有用户
+ */
 router.get('/queryAll', function (req, res, next) {
     userHandle.queryAll(req, res, next, sqlValue.queryAll);
 });
 
-// 根据ID删除用户
+/**
+ * /users/deleteById
+ * 根据ID删除用户
+ * 获取拼接在url上的ID
+ */
 router.get('/deleteById', function (req, res, next) {
     let obj = new URL(req.url, 'http://localhost:8880/');
     if (!obj.searchParams.get('id')) {
@@ -54,6 +70,11 @@ router.get('/deleteById', function (req, res, next) {
 });
 
 // 根据ID删除用户
+/**
+ * /users/deleteByIds
+ * 根据IDs删除用户
+ * 获取拼接在url上的IDs
+ */
 router.get('/deleteByIds', function (req, res, next) {
     let obj = new URL(req.url, 'http://localhost:8880/');
     if (!obj.searchParams.get('ids')) {
@@ -67,15 +88,6 @@ router.get('/deleteByIds', function (req, res, next) {
 
 
 /* POST users listing. */
-/**
- *  /users/insertSelective
- *  新增用户
- *  根据传入的对象插值，如果是null，就使用数据库字段默认值
- */
-router.post('/insertSelective', function (req, res, next) {
-    sql('y_users', {data: req.body}, sqlValue);
-    userHandle.insert(req, res, next, sqlValue.insert);
-});
 
 /**
  *  /users/insert
@@ -86,7 +98,17 @@ router.post('/insert', function (req, res, next) {
     // 新建表对象
     let user = new User(req.body);
     req.body = user;
-    sql('y_users', {data: user}, sqlValue);
+    sql(tableName, {data: user}, sqlValue);
+    userHandle.insert(req, res, next, sqlValue.insert);
+});
+
+/**
+ *  /users/insertSelective
+ *  新增用户
+ *  根据传入的对象插值，如果是null，就使用数据库字段默认值
+ */
+router.post('/insertSelective', function (req, res, next) {
+    sql(tableName, {data: req.body}, sqlValue);
     userHandle.insert(req, res, next, sqlValue.insert);
 });
 
@@ -96,7 +118,7 @@ router.post('/insert', function (req, res, next) {
  *  根据传入的对象插值，如果是null，就插入null，不会使用数据库字段默认值
  */
 router.post('/batchInsertSelective', function (req, res, next) {
-    sql('y_users', {data: req.body}, sqlValue);
+    sql(tableName, {data: req.body}, sqlValue);
     let data = [];
     for (let i = 0; i < req.body.length; i++) {
         data.push(Object.values(req.body[i]));
@@ -119,16 +141,27 @@ router.post('/batchInsert', function (req, res, next) {
         data.push(Object.values(user));
     }
     req.body = data;
-    sql('y_users', {data: new User(req.body[0])}, sqlValue);
+    sql(tableName, {data: new User(req.body[0])}, sqlValue);
     userHandle.batchInsert(req, res, next, sqlValue.batchInsert);
 });
 
+/**
+ *  /users/updateById
+ *  根据ID更新用户数据
+ */
+router.post('/updateById', function (req, res, next) {
+    sql(tableName, {data: req.body}, sqlValue);
+    userHandle.updateById(req, res, next, sqlValue.updateById);
+});
+
+/**
+ *  /users/batchUpdate
+ *  批量更新(增、删、改)
+ */
 router.post('/batchUpdate', function (req, res, next) {
-    if (!req.body) {
-        res.send('参数为空');
-        return false;
-    }
-    userHandle.batchUpdate(req, res, next);
+    console.log(req.body);
+    sql(tableName, {data: req.body}, sqlValue);
+    userHandle.batchUpdate(req, res, next, sqlValue);
 });
 /* POST users listing. */
 

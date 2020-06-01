@@ -11,7 +11,7 @@ let mysql = require('mysql');
 // 引入mysql连接配置
 let mysqlConfig = require('../../config/mysql');
 // 引入连接池配置
-let poolExtend = require('../poolextent');
+let poolExtend = require('../poolExtent');
 // 引入SQL模块
 let sql = require('./sql');
 // 引入json模块

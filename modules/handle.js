@@ -11,7 +11,7 @@ let mysql = require('mysql');
 // 引入mysql连接配置
 let mysqlConfig = require('../config/mysql');
 // 引入连接池配置
-let poolExtend = require('./poolextent');
+let poolExtend = require('./poolExtent');
 // 引入SQL模块
 let sql = require('./User/sql');
 // 引入json模块
@@ -36,7 +36,6 @@ let userData = {
     // 新增多条
     batchInsert: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
-            console.log(req.body);
             connection.query(sql, [req.body], function (err, result) {
                 if (result) {
                     result = 'insert'
@@ -49,7 +48,7 @@ let userData = {
         });
     },
     // 批量更新(增、删、改)
-    batchUpdate: function (req, res, next) {
+    batchUpdate: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
             let result = 'batchUpdate';
             for (let i = 0; i < req.body.length; i++) {
@@ -57,7 +56,6 @@ let userData = {
                 delete req.body[i]._status;
                 if (status === 'ADD') {
                     connection.query(sql.insert, [...Object.values(req.body[i])], function (err, result) {
-                        console.log(err);
                         if (err) {
                             result = undefined
                         }
@@ -65,15 +63,18 @@ let userData = {
                 } else if (status === 'UPDATE') {
                     let id = req.body[i].id;
                     delete req.body[i].id;
-                    connection.query(sql.update, [...Object.values(req.body[i]), +id],
+                    console.log(sql.updateById);
+                    connection.query(sql.updateById, [...Object.values(req.body[i]), +id],
                         function (err, result) {
+                        console.log(err);
+                        console.log(result);
                             if (err) {
                                 result = undefined
                             }
                         });
                 } else if (status === 'DELETE') {
                     let id = req.body[i].id;
-                    connection.query(sql.delete, id, function (err, result) {
+                    connection.query(sql.deleteById, id, function (err, result) {
                         if (err) {
                             result = undefined
                         }
@@ -88,7 +89,6 @@ let userData = {
     // 根据多个ID删除
     deleteByIds: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
-            console.log(req.query.ids);
             connection.query(sql, [req.query.ids.split(',')], function (err, result) {
                 let affected;
                 if (!err && result.affectedRows === 0) {
@@ -122,24 +122,9 @@ let userData = {
                     affected = '删除成功';
                 } else {
                     result = undefined;
+                    affected = err;
                 }
                 json(res, result, affected);
-                connection.release();
-            });
-        });
-    },
-    // 根据ID更新
-    update: function (req, res, next) {
-        let id = req.body[i].id;
-        delete req.body[i].id;
-        pool.getConnection(function (err, connection) {
-            connection.query(sql.update, [...Object.values(req.body), +id], function (err, result) {
-                if (result.affectedRows > 0) {
-                    result = 'update'
-                } else {
-                    result = undefined;
-                }
-                json(res, result);
                 connection.release();
             });
         });
@@ -183,7 +168,6 @@ let userData = {
     queryAll: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
             connection.query(sql, function (err, result) {
-                console.log(err);
                 if (!!result && result !== '') {
                     result = {
                         result: 'queryAll',
@@ -196,6 +180,44 @@ let userData = {
                 connection.release();
             });
         });
-    }
+    },
+    // 根据ID更新
+    updateById: function (req, res, next, sql) {
+        let id = req.body.id;
+        delete req.body.id;
+        pool.getConnection(function (err, connection) {
+            connection.query(sql, [...Object.values(req.body), +id], function (err, result) {
+                let affected;
+                if (!err && result.affectedRows === 0) {
+                    result = 'update';
+                    affected = '根据ID未查询到数据';
+                } else if (result.affectedRows > 0) {
+                    result = 'update';
+                    affected = '更新成功';
+                } else {
+                    result = undefined;
+                    affected = err;
+                }
+                json(res, result, affected);
+                connection.release();
+            });
+        });
+    },
+    // 根据ID更新
+    update: function (req, res, next) {
+        let id = req.body[i].id;
+        delete req.body[i].id;
+        pool.getConnection(function (err, connection) {
+            connection.query(sql.update, [...Object.values(req.body), +id], function (err, result) {
+                if (result.affectedRows > 0) {
+                    result = 'update'
+                } else {
+                    result = undefined;
+                }
+                json(res, result);
+                connection.release();
+            });
+        });
+    },
 };
 module.exports = userData;

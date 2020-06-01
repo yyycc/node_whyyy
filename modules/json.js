@@ -9,7 +9,7 @@ var json = function (res, result, msg) {
     } else if (result === 'insert') {
         res.json({
             code: '200',
-            msg: '添加成功'
+            msg: msg || '添加成功'
         });
     } else if (result === 'delete') {
         res.json({
@@ -19,7 +19,7 @@ var json = function (res, result, msg) {
     } else if (result === 'update') {
         res.json({
             code: '200',
-            msg: '更改成功'
+            msg: msg
         });
     } else if (result === 'batchUpdate') {
         res.json({

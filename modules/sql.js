@@ -24,19 +24,30 @@ let user = function (tableName, tableObject, sql) {
     sql.deleteByIds = 'DELETE FROM ' + tableName + ' WHERE ' + tableObject.id + ' in (?)';
 
     // 根据传入对象的字段数目动态拼接sql
-    let tableColumns, values = [];
+    let tableColumns, values = [], updateColumns = [];
     if (!!tableObject.data && !(tableObject.data instanceof Array)) {
         // data是对象的时候
         tableColumns = Object.keys(tableObject.data);
         for (let i = 0; i < tableColumns.length; i++) {
             values.push('?');
+            if (tableColumns[i] !== '_status' && tableColumns[i] !== 'id') {
+                updateColumns.push(tableColumns[i] + '=?');
+            }
         }
     } else if (!!(tableObject.data instanceof Array) && tableObject.data.length > 0) {
         // data是数组的时候
         tableColumns = Object.keys(tableObject.data[0]);
+        for (let i = 0; i < tableColumns.length; i++) {
+            if (tableColumns[i] !== '_status' && tableColumns[i] !== 'id') {
+                updateColumns.push(tableColumns[i] + '=?');
+            }
+        }
     }
     sql.insert = 'INSERT INTO y_users(' + tableColumns + ') VALUES(' + values.join(',') + ')';
     sql.batchInsert = 'INSERT INTO y_users(' + tableColumns + ') VALUES ?';
+
+
+    sql.updateById = 'UPDATE ' + tableName + ' set ' + updateColumns.join(',') + ' where id=?';
 };
 
 

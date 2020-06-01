@@ -8,6 +8,7 @@ function User(user) {
     this.phone_number = user.phone_number;
     this.age = user.age;
     this.creation_date = user.creation_date;
+    this.last_update_date = user.last_update_date;
 }
 
 module.exports = User;
