@@ -1,6 +1,19 @@
 //json.js
 //封装接送模块
-var json = function (res, result, msg) {
+let json = function (res, success, data) {
+    if (!success) {
+        res.json({
+            success: success,
+            data: data
+        })
+    } else {
+        res.json({
+            success: success,
+            data: data
+        })
+    }
+};
+/*var json = function (res, result, msg) {
     if (typeof result === 'undefined') {
         res.json({
             code: '1',
@@ -77,5 +90,5 @@ var json = function (res, result, msg) {
     } else {
         res.json(result);
     }
-};
+};*/
 module.exports = json;

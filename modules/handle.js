@@ -19,15 +19,27 @@ let json = require('./json');
 // 使用连接池，提升性能
 let pool = mysql.createPool(poolExtend({}, mysqlConfig));
 
+let handleResult = function(err, result, res) {
+    let data = {}, success;
+    if (result) {
+        success = true;
+        data.affectedRows = result.affectedRows
+        console.log(result);
+    } else if (err) {
+        success = false;
+        data.code = err.code;
+        data.sqlMessage = err.sqlMessage;
+        data.sql = err.sql;
+    }
+    json(res, success, data);
+};
+
 let userData = {
     // 新增
     insert: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
             connection.query(sql, [...Object.values(req.body)], function (err, result) {
-                if (result) {
-                    result = 'insert'
-                }
-                json(res, result, err);
+                handleResult(err, result, res);
                 // 释放连接
                 connection.release();
             });

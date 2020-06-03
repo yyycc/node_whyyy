@@ -36,7 +36,6 @@ let user = function (tableName, tableObject, sql) {
         tableColumns = Object.keys(tableObject.data);
         if (tableColumns && tableColumns.length > 0) {
             remove(tableColumns, '_status');
-            remove(tableColumns, 'id');
         }
         for (let i = 0; i < tableColumns.length; i++) {
             values.push('?');
