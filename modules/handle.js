@@ -19,12 +19,25 @@ let json = require('./json');
 // 使用连接池，提升性能
 let pool = mysql.createPool(poolExtend({}, mysqlConfig));
 
-let handleResult = function(err, result, res) {
+let changeResult = function(err, result, res) {
     let data = {}, success;
     if (result) {
         success = true;
-        data.affectedRows = result.affectedRows
-        console.log(result);
+        data.affectedRows = result.affectedRows;
+    } else if (err) {
+        success = false;
+        data.code = err.code;
+        data.sqlMessage = err.sqlMessage;
+        data.sql = err.sql;
+    }
+    json(res, success, data);
+};
+
+let queryResult = function(err, result, res) {
+    let data = {}, success;
+    if (result) {
+        success = true;
+        data = result;
     } else if (err) {
         success = false;
         data.code = err.code;
@@ -39,7 +52,7 @@ let userData = {
     insert: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
             connection.query(sql, [...Object.values(req.body)], function (err, result) {
-                handleResult(err, result, res);
+                changeResult(err, result, res);
                 // 释放连接
                 connection.release();
             });
@@ -49,11 +62,7 @@ let userData = {
     batchInsert: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
             connection.query(sql, [req.body], function (err, result) {
-                if (result) {
-                    result = 'insert'
-                }
-                // 以json形式，把操作结果返回给前台页面
-                json(res, result, err);
+                changeResult(err, result, res);
                 // 释放连接
                 connection.release();
             });
@@ -150,15 +159,7 @@ let userData = {
         let id = +req.query.id;
         pool.getConnection(function (err, connection) {
             connection.query(sql, id, function (err, result) {
-                if (!!result && result !== '') {
-                    result = {
-                        result: 'queryById',
-                        data: result //id查询必然匹配到<=1条数据
-                    }
-                } else {
-                    result = undefined;
-                }
-                json(res, result, err);
+                queryResult(err, result, res);
                 connection.release();
             });
         });
@@ -167,15 +168,7 @@ let userData = {
     query: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
             connection.query(sql, [...Object.values(req.query)], function (err, result) {
-                if (!!result && result !== '') {
-                    result = {
-                        result: 'query',
-                        data: result
-                    }
-                } else {
-                    result = undefined;
-                }
-                json(res, result, err);
+                queryResult(err, result, res);
                 connection.release();
             });
         });
@@ -184,15 +177,7 @@ let userData = {
     queryAll: function (req, res, next, sql) {
         pool.getConnection(function (err, connection) {
             connection.query(sql, function (err, result) {
-                if (!!result && result !== '') {
-                    result = {
-                        result: 'queryAll',
-                        data: result
-                    }
-                } else {
-                    result = undefined;
-                }
-                json(res, result, err);
+                queryResult(err, result, res);
                 connection.release();
             });
         });

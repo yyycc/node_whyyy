@@ -175,3 +175,4 @@ router.post('/batchUpdate', function (req, res, next) {
 /* POST blog listing. */
 
 module.exports = router;
+
