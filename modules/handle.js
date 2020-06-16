@@ -71,27 +71,33 @@ let userData = {
     // 批量更新(增、删、改)
     batchUpdate: function (req, res, next) {
         pool.getConnection(function (err, connection) {
-            let result = 'batchUpdate';
+            let success = true;
             let msg = '更新成功';
             for (let i = 0; i < req.body.length; i++) {
                 let status = req.body[i]._status;
                 let sql = req.body[i].sql;
                 delete req.body[i]._status;
                 delete req.body[i].sql;
+                console.log(sql);
                 if (status === 'ADD') {
                     connection.query(sql, [...Object.values(req.body[i])],
                         function (err, result) {
                             if (err) {
                                 msg = err;
+                                success = false;
                             }
                         });
                 } else if (status === 'UPDATE') {
                     let id = req.body[i].id;
                     delete req.body[i].id;
+                    console.log(id);
                     connection.query(sql, [...Object.values(req.body[i]), +id],
                         function (err, result) {
+                        console.log(err);
+                        console.log(result);
                             if (err) {
                                 msg = err;
+                                success = false;
                             }
                         });
                 } else if (status === 'DELETE') {
@@ -102,11 +108,12 @@ let userData = {
                     connection.query(sql, id, function (err, result) {
                         if (err) {
                             msg = err;
+                            success = false;
                         }
                     });
                 }
             }
-            json(res, result, msg);
+            json(res, success, msg);
             connection.release();
         })
     },

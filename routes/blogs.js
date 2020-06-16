@@ -149,7 +149,7 @@ router.post('/batchInsert', function (req, res, next) {
  *  根据ID更新博客数据
  */
 router.post('/updateById', function (req, res, next) {
-    sql(tableName, {data: req.body}, sqlValue);
+    sql(tableName, {id: 'blog_id', data: req.body}, sqlValue);
     userHandle.updateById(req, res, next, sqlValue.updateById);
 });
 
@@ -164,6 +164,8 @@ router.post('/batchUpdate', function (req, res, next) {
             req.body[i].sql = sqlValue.insert;
         }
         if (req.body[i]._status === 'UPDATE') {
+            req.body[i].id = req.body[i].blog_id;
+            delete req.body[i].blog_id;
             req.body[i].sql = sqlValue.updateById;
         }
         if (req.body[i]._status === 'DELETE') {

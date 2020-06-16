@@ -21,6 +21,9 @@ let remove = function (arg, ele) {
     }
 };
 let user = function (tableName, tableObject, sql) {
+    if (!tableObject.id) {
+        tableObject.id = 'id';
+    }
     sql.queryAll = 'SELECT * FROM ' + tableName;
     sql.queryById = 'SELECT * FROM ' + tableName + ' WHERE ' + tableObject.id + '=?';
     sql.query = 'SELECT * FROM ' + tableName;
@@ -39,7 +42,9 @@ let user = function (tableName, tableObject, sql) {
         }
         for (let i = 0; i < tableColumns.length; i++) {
             values.push('?');
-            updateColumns.push(tableColumns[i] + '=?');
+            if (tableColumns[i] !== tableObject.id) {
+                updateColumns.push(tableColumns[i] + '=?');
+            }
         }
     } else if (!!(tableObject.data instanceof Array) && tableObject.data.length > 0) {
         // data是数组的时候
@@ -52,7 +57,7 @@ let user = function (tableName, tableObject, sql) {
     sql.batchInsert = 'INSERT INTO ' + tableName + ' (' + tableColumns + ') VALUES ?';
 
 
-    sql.updateById = 'UPDATE ' + tableName + ' set ' + updateColumns.join(',') + ' where id=?';
+    sql.updateById = 'UPDATE ' + tableName + ' set ' + updateColumns.join(',') + ' where ' + tableObject.id + '=?';
 };
 
 
