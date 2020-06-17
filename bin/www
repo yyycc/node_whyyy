@@ -19,8 +19,8 @@ const httpsOption = {
  * Get port from environment and store in Express.
  */
 
-let port = normalizePort('8871');
-let https_port = normalizePort(process.env.PORT || '8870');
+let port = normalizePort('8881');
+let https_port = normalizePort(process.env.PORT || '8880');
 app.set('port', port);
 
 /**
